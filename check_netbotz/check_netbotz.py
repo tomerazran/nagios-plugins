@@ -9,7 +9,7 @@
     The plugin was tested on Centos 6.3 with python 2.6.
     Needed python snmp binding (net-snmp-python). 
     
-    Copyright (C) 2012 - Tomer Azran
+    Copyright (C) 2013 - Tomer Azran
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
