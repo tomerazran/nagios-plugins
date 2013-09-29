@@ -9,7 +9,7 @@
     The plugin was tested on Centos 6.3 with python 2.6.
     Needed python snmp binding (net-snmp-python). 
     
-    Copyright (C) 2013 - Tomer Azran
+    Copyright (C) 2012 - Tomer Azran
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ def parse_options():
     parser.add_option("-H", "--host", dest="hostname",type="string", help="NetBotz Host Name", metavar="HOST")
     parser.add_option("-c", "--community", dest="community", default="public", type="string", help="SNMP Community Name. [Default:public]")
     parser.add_option("-t", "--type", dest="type", default="temp", type="string", help="Test Type. Valid values are 'temp' for tempratue test, and 'humid' for humidity tests. [Default:temp]")
-    parser.add_option("-e", "--onerror", dest="onerror", default=2, type="int", help="On error exit code. Valid values are 1 for warning, 2 for critical. [Default:2]")
+#    parser.add_option("-e", "--onerror", dest="onerror", default=2, type="int", help="On error exit code. Valid values are 1 for warning, 2 for critical. [Default:2]")
     
     return parser.parse_args()
 
@@ -75,16 +75,16 @@ def validate_parameters(options, args):
         print "Error: type option %s is not allowed " % (options.type)
         sys.exit(RET_CODES["UNKNOWN"])
     
-    if options.onerror != 1 and options.onerror != 2:
-        print "Error: onerror option %s is not allowed " % (options.onerror)
-        sys.exit(RET_CODES["UNKNOWN"])
+    #if options.onerror != 1 and options.onerror != 2:
+    #    print "Error: onerror option %s is not allowed " % (options.onerror)
+    #    sys.exit(RET_CODES["UNKNOWN"])
         
-def get_on_error_ret_code(onerror):
-    
-    if onerror == 1:
-        return RET_CODES["WARNING"]
-    else:
-        return RET_CODES["CRITICAL"]
+#def get_on_error_ret_code(onerror):
+#    
+#    if onerror == 1:
+#        return RET_CODES["WARNING"]
+#    else:
+#        return RET_CODES["CRITICAL"]
 
 def check_netbotz(options):
     
@@ -149,17 +149,23 @@ def check_netbotz(options):
                                                        Community=options.community)[0]
     
     ret_code = RET_CODES["OK"]
-    on_error_retcode = get_on_error_ret_code(options.onerror)
+    #on_error_retcode = get_on_error_ret_code(options.onerror)
     desc = ""
     
     for key in return_values.keys():
         desc += "%s %s test: %s%s " % (return_values[key]["name"],test_name,return_values[key]["value"],test_units)
-        if return_values[key]["value"] < return_values[key]["low_value"]:
-            ret_code = on_error_retcode
-            desc += " - The %s value is LOWER than allowed treshold. " % test_name
-        elif return_values[key]["value"] > return_values[key]["high_value"]:
-            ret_code = on_error_retcode
-            desc += " - The %s value is HIGHER than allowed treshold. " % test_name
+	if int(return_values[key]["value"]) <= int(return_values[key]["min_value"]):
+            ret_code = RET_CODES["CRITICAL"]
+            desc += " - The %s value is LOWER than minimum allowed treshold. " % test_name
+        elif int(return_values[key]["value"]) <= int(return_values[key]["low_value"]):
+            ret_code = RET_CODES["WARNING"]
+            desc += " - The %s value is LOWER than allowed LOW treshold. " % test_name
+	elif int(return_values[key]["value"]) >= int(return_values[key]["high_value"]):
+            ret_code = RET_CODES["WARNING"]
+            desc += " - The %s value is HIGHER than allowed HIGH treshold. " % test_name
+        elif int(return_values[key]["value"]) >= int(return_values[key]["max_value"]):
+            ret_code = RET_CODES["CRITICAL"]
+            desc += " - The %s value is HIGHER than allowed MAX treshold. " % test_name
         
         desc += " - The %s value is OK. " % test_name
     
@@ -167,15 +173,19 @@ def check_netbotz(options):
     
     if ret_code == RET_CODES["OK"]:
         desc = "OK: "+desc
-    else:
-        desc = "ERROR: "+desc
+    elif ret_code == RET_CODES["WARNING"]:
+        desc = "WARNING: "+desc
+    elif ret_code == RET_CODES["CRITICAL"]:
+        desc = "CRITICAL: "+desc
         
     desc += " | "
     for key in return_values.keys():
-        desc += "'%s %s'=%s%s;;;%s;%s; " % (return_values[key]["name"],
+        desc += "'%s %s'=%s%s;%s;%s;%s;%s; " % (return_values[key]["name"],
                                               test_name,
                                               return_values[key]["value"],
                                               test_units_for_perf_data,
+                                              return_values[key]["high_value"],
+                                              return_values[key]["max_value"],
                                               return_values[key]["max_value"],
                                               return_values[key]["min_value"])
         
