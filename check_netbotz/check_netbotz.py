@@ -60,7 +60,7 @@ def parse_options():
     parser = OptionParser()
     parser.add_option("-H", "--host", dest="hostname",type="string", help="NetBotz Host Name", metavar="HOST")
     parser.add_option("-c", "--community", dest="community", default="public", type="string", help="SNMP Community Name. [Default:public]")
-    parser.add_option("-t", "--type", dest="type", default="temp", type="string", help="Test Type. Valid values are 'temp' for tempratue test, and 'humid' for humidity tests. [Default:temp]")
+    parser.add_option("-t", "--type", dest="type", default="temp", type="string", help="Test Type. Valid values are 'temp' for temperature test, and 'humid' for humidity tests. [Default:temp]")
 #    parser.add_option("-e", "--onerror", dest="onerror", default=2, type="int", help="On error exit code. Valid values are 1 for warning, 2 for critical. [Default:2]")
     
     return parser.parse_args()
@@ -95,7 +95,7 @@ def check_netbotz(options):
     
     if options.type == "temp":
         oids = OID_MAP["TEMP"]
-        test_name = "Tempratue"
+        test_name = "Temperature"
         test_units = "C"        
     else:
         oids = OID_MAP["HUMIDITY"]
